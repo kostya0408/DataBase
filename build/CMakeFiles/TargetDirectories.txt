@@ -1,0 +1,3 @@
+/home/veretkos/sqlll/DataBase/build/CMakeFiles/MyExe.dir
+/home/veretkos/sqlll/DataBase/build/CMakeFiles/edit_cache.dir
+/home/veretkos/sqlll/DataBase/build/CMakeFiles/rebuild_cache.dir

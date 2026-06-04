@@ -49,6 +49,7 @@ int callback(void* NotUsed, int argc, char** argv, char** azColName)
     enum MainMenu {
         TABLES = 1,
         STUDENTS,
+        SUBJECTS,
         GRADES,
         SEARCH,
         SORT,
@@ -60,6 +61,7 @@ unordered_map<string, MainMenu> commands = {
     {"exit", EXIT},
     {"tables", TABLES},
     {"students", STUDENTS},
+    {"subjects", SUBJECTS},
     {"grades", GRADES},
     {"search", SEARCH},
     {"sort", SORT},
@@ -74,6 +76,7 @@ void show_grades_menu();
 void show_find_menu();
 void show_sort_menu();
 void show_statics_menu();
+void show_subject_menu();
 void open_submenu(MainMenu cmd, sqlite3* db);
 
 void pause() {
@@ -118,7 +121,7 @@ void create_subjects(sqlite3* db){
 }
 void create_grades(sqlite3* db){
     string sql =
-        "CREATE TABLE grades ("
+        "CREATE TABLE IF NOT EXISTS grades ("
         "Id integer PRIMARY KEY AUTOINCREMENT, "
         "score integer CHECK (score >= 1 AND score <= 12), "
         "student_id INTEGER, "
@@ -153,6 +156,8 @@ void add_student(sqlite3* db){
 }
 void add_subject(sqlite3* db){
     string subject;
+    cout<<"Enter subject: ";
+    cin>>subject;
     string sql = "Insert into subjects (subject) Values ('" + subject + "');" ;
     int rc = sqlite3_exec(db, sql.c_str(), 0, 0, 0);
 }
@@ -167,13 +172,43 @@ void add_grade(sqlite3* db){
     cout<<"Enter subject id: ";
     cin>>subject_id;
 
-    string sql = "Insert into grades (score, student_id, subject_id) Values ('" +
-        to_string(score) + ", " +
-        to_string(student_id) + ", " +
-        to_string(subject_id) + ");";
+    string sql = "Insert into grades (score, student_id, subject_id) Values (" +to_string(score)+ ", " +to_string(student_id)+ ", " +to_string(subject_id)+ ");";
 
     int rc = sqlite3_exec(db, sql.c_str(), 0, 0, 0);
 }
+void delete_student(sqlite3* db){
+    int id;
+    cout<<"Enter student ID: ";
+    cin>>id;
+    string sql = "DELETE FROM students WHERE Id = " + to_string(id)+ ";";
+    int rc = sqlite3_exec(db, sql.c_str(), 0, 0, 0);
+}
+void update_student(sqlite3* db){
+    string firstname;
+    string lastname;
+    int id;
+    cout<<"Enter id: ";
+    cin>>id;
+    cout<<"Enter firstname: ";
+    cin>>firstname;
+    cout<<"Enter lastname: ";
+    cin>>lastname;
+
+   string sql = "UPDATE students SET Name = '" + firstname + "', Surname = '" + lastname + "' WHERE Id = " + to_string(id) + ";";
+    int rc = sqlite3_exec(db, sql.c_str(), 0, 0, 0);
+}
+void show_all_students(sqlite3* db){
+    string sql = "Select * from students;";
+    int rc = sqlite3_exec(db, sql.c_str(), callback, 0, 0);
+}
+void show_student_ID(sqlite3* db){
+    int id;
+    cout<<"Enter ID: ";
+    cin>>id;
+    string sql = "SELECT s.Surname, s.Name, sub.Subject, g.score FROM grades g JOIN subjects sub ON g.subject_id = sub.id JOIN students s ON g.student_id = s.id Where  g.student_id = " +to_string(id)+ ";";
+    int rc = sqlite3_exec(db, sql.c_str(), callback, 0, 0);
+}
+
 
 
 int main()
@@ -220,6 +255,7 @@ void show_main_menu() {
     printf("4. search\n");
     printf("5. sort\n");
     printf("6. stats\n");
+    printf("7. subjects\n");
     printf("0. exit\n");
 }
 void show_table_menu(sqlite3* db) {
@@ -268,16 +304,16 @@ void show_student_menu(sqlite3* db) {
         add_student(db);
     }
     else if (input == "delete") {
-
+        delete_student(db);
     }
     else if (input == "update") {
-
+        update_student(db);
     }
     else if (input == "show_all") {
-
+        show_all_students(db);
     }
     else if (input == "show_by_id") {
-
+        show_student_ID(db);
     }
     else if (input == "exit") {
 
@@ -307,11 +343,11 @@ void show_grades_menu(sqlite3* db) {
     cin >> input;
     if (input == "add_grade")
     {
-
+        add_grade(db);
     }
     else if (input == "change_grade")
     {
-
+        // update_grade(db);
     }
     else if (input == "delete_grade")
     {
@@ -475,8 +511,29 @@ void show_statics_menu(sqlite3* db) {
 
     }
 
+    
 }
+void show_subject_menu(sqlite3* db){
+    printf("Subject menu\n");
+    printf("1.Add Subject (add)\n");
+    printf("2.Update Subject (update)\n");
+    printf("3.Delete Subject (delete)\n");
+    printf("0. Exit (exit)\n");
 
+   string input;
+   cin >> input;
+
+   if(input == "add"){
+    add_subject(db);
+   }
+   else if(input == "update"){
+
+   }
+   else if(input == "delete"){
+
+   }
+   else if(input == "exit");
+}
 
 
 
@@ -499,6 +556,9 @@ void open_submenu(MainMenu cmd, sqlite3* db) {
             break;
         case STATS:
             show_statics_menu(db);
+            break;
+        case SUBJECTS:
+            show_subject_menu(db);
             break;
     }
 }
